@@ -1,6 +1,8 @@
 package models
 
 import (
+	"strings"
+
 	"example.com/shorturl/db"
 	"example.com/shorturl/utils"
 )
@@ -20,7 +22,7 @@ func (u *URL) UrlManager() error {
 		return err
 	}
 
-	genarateKey := "ShortUrl/" + key
+	genarateKey := "https://ShortUrl/" + key
 	u.UniqueKey = key
 	u.Shorturl = genarateKey
 
@@ -33,10 +35,6 @@ func (u *URL) UrlManager() error {
 	}
 	defer stmt.Close()
 
-	// fmt.Println(u.LongURL)
-	// fmt.Println(u.UniqueKey)
-	// fmt.Println(u.Shorturl)
-
 	result, err := stmt.Exec(u.LongURL, u.UniqueKey, u.Shorturl)
 	if err != nil {
 		return err
@@ -44,4 +42,17 @@ func (u *URL) UrlManager() error {
 	task_id, err := result.LastInsertId()
 	u.Id = task_id
 	return err
+}
+
+func Urlretrive(shortkey string) (string, error) {
+	query := "SELECT url FROM urllist WHERE uniqueKey = ?"
+	prefix := "https://ShortUrl/"
+	uniqueKey := strings.TrimPrefix(shortkey, prefix)
+	row := db.DB.QueryRow(query, uniqueKey)
+	var l_key string
+	err := row.Scan(&l_key)
+	if err != nil {
+		return "", err
+	}
+	return l_key, nil
 }
